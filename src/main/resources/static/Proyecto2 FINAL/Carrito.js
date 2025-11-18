@@ -1,7 +1,8 @@
+// Carrito.js
 // =========================
 // CONFIG
 // =========================
-const API_BASE = "https://TU-BACKEND.onrender.com/api"; // ← CAMBIA ESTO
+const API_BASE = "https://backendfinal-6hlu.onrender.com/api";
 let token = localStorage.getItem("token");
 
 // =========================
@@ -18,6 +19,7 @@ function guardarCarrito() {
 // =========================
 function mostrarCarrito() {
   const contenedor = document.getElementById("lista-carrito");
+  if (!contenedor) return;
   contenedor.innerHTML = "";
 
   let total = 0;
@@ -29,7 +31,7 @@ function mostrarCarrito() {
     div.classList.add("carrito-item");
 
     div.innerHTML = `
-      <span>${item.producto}</span>
+      <span>${escapeHtml(item.producto)}</span>
 
       <div class="cantidad-control">
         <button class="btn-restar" data-index="${index}">-</button>
@@ -82,49 +84,70 @@ function mostrarCarrito() {
   );
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 mostrarCarrito();
 
 // =========================
 // ENVIAR PEDIDO AL BACKEND
 // =========================
-document.getElementById("pedido-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
+const pedidoForm = document.getElementById("pedido-form");
+if (pedidoForm) {
+  pedidoForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-  if (!token) {
-    alert("⚠️ Debes iniciar sesión para hacer un pedido");
-    return;
-  }
-
-  const data = {
-    nombreCliente: document.getElementById("nombre").value,
-    telefono: document.getElementById("telefono").value,
-    direccion: document.getElementById("direccion").value,
-    itemsJson: JSON.stringify(carrito),
-    total: carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0)
-  };
-
-  try {
-    const res = await fetch(`${API_BASE}/pedidos`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-
-    if (!res.ok) {
-      throw new Error("Error creando pedido");
+    token = localStorage.getItem("token"); // actualizar por si cambió
+    if (!token) {
+      alert("⚠️ Debes iniciar sesión para hacer un pedido");
+      window.location.href = "login.html";
+      return;
     }
 
-    alert("✅ Pedido enviado correctamente");
+    if (carrito.length === 0) {
+      alert("El carrito está vacío.");
+      return;
+    }
 
-    localStorage.removeItem("carrito");
-    carrito = [];
-    mostrarCarrito();
+    const data = {
+      nombreCliente: document.getElementById("nombre").value,
+      telefono: document.getElementById("telefono").value,
+      direccion: document.getElementById("direccion").value,
+      itemsJson: JSON.stringify(carrito),
+      total: carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0)
+    };
 
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error enviando el pedido");
-  }
-});
+    try {
+      const res = await fetch(`${API_BASE}/pedidos`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(()=>null);
+        console.error("Error creating order:", body);
+        throw new Error(body?.message || "Error creando pedido");
+      }
+
+      alert("✅ Pedido enviado correctamente");
+
+      localStorage.removeItem("carrito");
+      carrito = [];
+      mostrarCarrito();
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error enviando el pedido");
+    }
+  });
+}

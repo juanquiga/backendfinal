@@ -1,8 +1,8 @@
+// Menu.js
 // =========================
 // CONFIG
 // =========================
-const API_BASE = "https://TU-BACKEND.onrender.com/api"; // ← CAMBIA ESTO
-
+const API_BASE = "https://backendfinal-6hlu.onrender.com/api";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
 // =========================
@@ -11,23 +11,31 @@ let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 async function cargarProductos() {
   try {
     const res = await fetch(`${API_BASE}/productos`);
+    if (!res.ok) {
+      console.error("Error fetch productos", res.status);
+      return;
+    }
     const productos = await res.json();
 
     const contenedor = document.getElementById("productos");
+    if (!contenedor) return;
     contenedor.innerHTML = "";
 
     productos.forEach(prod => {
+      // ajusta campo de imagen si tu backend lo nombra diferente
+      const imagen = prod.imagenUrl || prod.imagen_url || prod.imagen || "placeholder.jpg";
+
       const card = document.createElement("div");
       card.classList.add("card");
 
       card.innerHTML = `
-        <h3>${prod.nombre}</h3>
-        <img src="${prod.imagenUrl}" alt="${prod.nombre}">
-        <p>${prod.descripcion}</p>
+        <h3>${escapeHtml(prod.nombre)}</h3>
+        <img src="${escapeHtml(imagen)}" alt="${escapeHtml(prod.nombre)}">
+        <p>${escapeHtml(prod.descripcion || "")}</p>
         <p><strong>$${prod.precio} COP</strong></p>
 
         <button class="add-to-cart"
-          data-product="${prod.nombre}"
+          data-product="${escapeHtml(prod.nombre)}"
           data-price="${prod.precio}">
           Agregar al Carrito
         </button>
@@ -43,6 +51,15 @@ async function cargarProductos() {
   }
 }
 
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // =========================
 // AÑADIR AL CARRITO
 // =========================
@@ -50,7 +67,7 @@ function asignarEventosCarrito() {
   document.querySelectorAll(".add-to-cart").forEach(btn => {
     btn.addEventListener("click", () => {
       const producto = btn.dataset.product;
-      const precio = parseInt(btn.dataset.price);
+      const precio = parseInt(btn.dataset.price, 10) || 0;
 
       const item = carrito.find(i => i.producto === producto);
 

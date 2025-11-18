@@ -7,7 +7,7 @@ COPY mvnw pom.xml ./
 COPY .mvn .mvn
 COPY src ./src
 RUN chmod +x mvnw
-RUN ./mvnw -B -DskipTests package
+RUN mvn -B -DskipTests package
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-jammy

@@ -1,17 +1,30 @@
-# Multi-stage Dockerfile for a Spring Boot app using the Maven wrapper
-# Build stage
-FROM maven:3.9.4-eclipse-temurin-17 AS build
+# =============================
+# STAGE 1: Build del proyecto
+# =============================
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
-# Copy only what is needed for dependency resolution first
-COPY mvnw pom.xml ./
-COPY .mvn .mvn
-COPY src ./src
-RUN chmod +x mvnw
-RUN ./mvnw -B -DskipTests package
 
-# Runtime stage
-FROM eclipse-temurin:17-jre-jammy
-ARG JAR_FILE=target/*.jar
+# Copiar pom y MVN wrapper
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+
+# Copiar el código
+COPY src ./src
+
+# Construir la app y empacar el jar ejecutable
+RUN mvn -DskipTests clean package
+
+# =============================
+# STAGE 2: Imagen final
+# =============================
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+
+# Copiar el JAR generado (spring boot lo repackea)
 COPY --from=build /app/target/*.jar /app/app.jar
+
+# Puerto (opcional)
 EXPOSE 8080
+
+# Ejecutar backend
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

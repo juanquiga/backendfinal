@@ -2,51 +2,32 @@ package com.example.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import com.example.backend.repository.UsuarioRepository;
-import com.example.backend.security.JwtAuthFilter;
-import com.example.backend.security.JwtUtils;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter.XFrameOptionsMode;
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtUtils jwtUtils;
-    private final UsuarioRepository usuarioRepo;
-
-    public SecurityConfig(JwtUtils jwtUtils, UsuarioRepository usuarioRepo) {
-        this.jwtUtils = jwtUtils;
-        this.usuarioRepo = usuarioRepo;
-    }
-
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        JwtAuthFilter jwtFilter = new JwtAuthFilter(jwtUtils, usuarioRepo);
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/productos/**", "/h2-console/**", "/").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/productos/**").permitAll()
-                .anyRequest().authenticated()
-            );
-
-        http.addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
-
-        // H2 console frame
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
+          .csrf().disable() // si usas JWT o APIs, normalmente se desactiva
+          .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/h2-console/**", "/api/auth/**", "/login.html", "/registro.html", "/", "/index.html", "/static/**", "/**.js", "/**.css").permitAll()
+            .anyRequest().authenticated()
+          )
+          .headers(headers -> headers
+            .frameOptions(frame -> frame.disable()) // permitir H2 console
+          );
 
         return http.build();
     }

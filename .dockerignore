@@ -1,0 +1,13 @@
+.mvn
+.mvn/**
+target
+*.log
+*.tmp
+**/node_modules
+**/frontend/**
+**/*.class
+**/*.jar
+**/*.war
+.idea
+.vscode
+.DS_Store

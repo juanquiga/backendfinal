@@ -2,6 +2,7 @@ package com.example.backend.security;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,8 +37,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = header.substring(7);
             if (jwtUtils.validateJwtToken(token)) {
                 String username = jwtUtils.getUsernameFromToken(token);
-                Usuario user = usuarioRepo.findByUsername(username).orElse(null);
-                if (user != null) {
+                Optional<Usuario> optUser = usuarioRepo.findByUsername(username);
+                if (optUser.isPresent()) {
+                    Usuario user = optUser.get();
                     UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                             user.getUsername(),
                             null,

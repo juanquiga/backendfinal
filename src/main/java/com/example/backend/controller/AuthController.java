@@ -1,6 +1,7 @@
 package com.example.backend.controller;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,22 +32,39 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody Map<String,String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        if (username == null || password == null) return ResponseEntity.badRequest().body("username and password required");
-        if (usuarioRepo.existsByUsername(username)) return ResponseEntity.badRequest().body("username exists");
+
+        if (username == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "username and password required"));
+        }
+
+        if (usuarioRepo.existsByUsername(username)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "username exists"));
+        }
+
         Usuario u = new Usuario(username, passwordEncoder.encode(password), "ROLE_USER");
         usuarioRepo.save(u);
-        return ResponseEntity.ok(Map.of("msg","registered"));
+
+        return ResponseEntity.ok(Map.of("msg", "registered"));
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String,String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        var opt = usuarioRepo.findByUsername(username);
-        if (opt.isEmpty()) return ResponseEntity.status(401).body("invalid credentials");
+
+        Optional<Usuario> opt = usuarioRepo.findByUsername(username);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error", "invalid credentials"));
+        }
+
         Usuario u = opt.get();
-        if (!passwordEncoder.matches(password, u.getPassword())) return ResponseEntity.status(401).body("invalid credentials");
+
+        if (!passwordEncoder.matches(password, u.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("error", "invalid credentials"));
+        }
+
         String token = jwtUtils.generateToken(u.getUsername());
+
         return ResponseEntity.ok(Map.of("token", token));
     }
 }

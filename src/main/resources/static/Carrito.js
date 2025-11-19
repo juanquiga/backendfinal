@@ -2,7 +2,7 @@
 // =========================
 // CONFIG
 // =========================
-const API_BASE = "https://backendfinal-lcjz.onrender.com/api";
+const API_BASE = "https://backendfinal-rkrx.onrender.com/api";
 let token = localStorage.getItem("token");
 
 // =========================

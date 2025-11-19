@@ -31,28 +31,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        try {
-            String header = request.getHeader("Authorization");
-            if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
-                String token = header.substring(7);
-                if (jwtUtils.validateJwtToken(token)) {
-                    String username = jwtUtils.getUsernameFromToken(token);
-                    Usuario user = usuarioRepo.findByUsername(username).orElse(null);
-                    if (user != null) {
-                        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                                user.getUsername(),
-                                null,
-                                List.of(new SimpleGrantedAuthority(user.getRole()))
-                        );
-                        SecurityContextHolder.getContext().setAuthentication(auth);
-                    }
+        String header = request.getHeader("Authorization");
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            if (jwtUtils.validateJwtToken(token)) {
+                String username = jwtUtils.getUsernameFromToken(token);
+                Usuario user = usuarioRepo.findByUsername(username).orElse(null);
+                if (user != null) {
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                            user.getUsername(),
+                            null,
+                            List.of(new SimpleGrantedAuthority(user.getRole()))
+                    );
+                    SecurityContextHolder.getContext().setAuthentication(auth);
                 }
             }
-        } catch (Exception ex) {
-            // no bloquear toda la petición por un fallo en el filter; solo loguea
-            logger.error("Error en JwtAuthFilter: " + ex.getMessage());
         }
-
         filterChain.doFilter(request, response);
     }
 }

@@ -34,7 +34,7 @@ public class SecurityConfig {
           .cors(Customizer.withDefaults())
           .csrf(csrf -> csrf.disable())
           .authorizeHttpRequests(auth -> auth
-               .requestMatchers("/api/auth/**", "/", "/index.html", "/favicon.ico", "/assets/**", "/static/**").permitAll()
+               .requestMatchers("/api/auth/**", "/", "/index.html", "/favicon.ico").permitAll()
                .anyRequest().authenticated()
           )
           .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
@@ -42,12 +42,16 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CORS: durante desarrollo/gh-pages permitimos orígenes; ajusta en producción
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Permite orígenes (temporal/útil para GitHub Pages). En producción pon dominios exactos.
-        config.setAllowedOriginPatterns(List.of("*"));
+        // añade aquí tu frontend GitHub pages exacto (sin trailing slash)
+        config.setAllowedOrigins(List.of(
+            "https://juanquiga.github.io",
+            "https://juanquiga.github.io/frontendfinal",
+            "http://localhost:5500",
+            "http://localhost:3000"
+        ));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

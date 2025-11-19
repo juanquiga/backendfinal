@@ -1,34 +1,34 @@
 package com.example.backend;
 
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
 
 import com.example.backend.model.Usuario;
 import com.example.backend.repository.UsuarioRepository;
 
-@Configuration
-public class DataInitializer {
+@Component
+public class DataInitializer implements CommandLineRunner {
 
-    @Bean
-    CommandLineRunner init(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
-        return args -> {
-            if (!usuarioRepository.existsByUsername("admin")) {
-                Usuario admin = new Usuario();
-                admin.setUsername("admin");
-                admin.setPassword(passwordEncoder.encode("admin123"));
-                admin.setRole("ROLE_ADMIN");
-                usuarioRepository.save(admin);
-            }
+    private final UsuarioRepository usuarioRepo;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-            if (!usuarioRepository.existsByUsername("cliente")) {
-                Usuario cliente = new Usuario();
-                cliente.setUsername("cliente");
-                cliente.setPassword(passwordEncoder.encode("cliente123"));
-                cliente.setRole("ROLE_USER");
-                usuarioRepository.save(cliente);
-            }
-        };
+    public DataInitializer(UsuarioRepository usuarioRepo, BCryptPasswordEncoder passwordEncoder) {
+        this.usuarioRepo = usuarioRepo;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        if (!usuarioRepo.existsByUsername("admin")) {
+            Usuario admin = new Usuario("admin", passwordEncoder.encode("admin123"), "ROLE_ADMIN");
+            usuarioRepo.save(admin);
+            System.out.println("Admin creado -> admin / admin123");
+        }
+        if (!usuarioRepo.existsByUsername("cliente")) {
+            Usuario cliente = new Usuario("cliente", passwordEncoder.encode("cliente123"), "ROLE_USER");
+            usuarioRepo.save(cliente);
+            System.out.println("Cliente creado -> cliente / cliente123");
+        }
     }
 }

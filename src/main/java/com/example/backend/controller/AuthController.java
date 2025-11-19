@@ -1,7 +1,6 @@
 package com.example.backend.controller;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -52,7 +51,7 @@ public class AuthController {
         String username = body.get("username");
         String password = body.get("password");
 
-        Optional<Usuario> opt = usuarioRepo.findByUsername(username);
+        var opt = usuarioRepo.findByUsername(username);
         if (opt.isEmpty()) {
             return ResponseEntity.status(401).body(Map.of("error", "invalid credentials"));
         }

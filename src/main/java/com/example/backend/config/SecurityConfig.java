@@ -26,16 +26,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // Opcional: si usas un JwtAuthFilter construido con jwtUtils y usuarioRepo
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtUtils jwtUtils, UsuarioRepository usuarioRepo) throws Exception {
         JwtAuthFilter jwtFilter = new JwtAuthFilter(jwtUtils, usuarioRepo);
 
         http
           .cors(Customizer.withDefaults())
-          .csrf(csrf -> csrf.disable()) // desactivamos CSRF para API REST + JWT
+          .csrf(csrf -> csrf.disable())
           .authorizeHttpRequests(auth -> auth
-               .requestMatchers("/api/auth/**", "/", "/index.html", "/static/**", "/favicon.ico").permitAll()
+               .requestMatchers("/api/auth/**", "/", "/index.html", "/favicon.ico", "/assets/**", "/static/**").permitAll()
                .anyRequest().authenticated()
           )
           .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
@@ -43,21 +42,18 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Configuración CORS — permite llamadas desde tu GitHub Pages y localhost (ajusta orígenes)
+    // CORS: durante desarrollo/gh-pages permitimos orígenes; ajusta en producción
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-            "https://juanquiga.github.io",    // tu frontend GitHub Pages
-            "http://localhost:5500",          // durante desarrollo (opcional)
-            "http://localhost:3000"
-        ));
+        // Permite orígenes (temporal/útil para GitHub Pages). En producción pon dominios exactos.
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", config);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }

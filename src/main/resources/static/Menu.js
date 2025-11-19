@@ -2,7 +2,7 @@
 // =========================
 // CONFIG
 // =========================
-const API_BASE = "https://backendfinal-s5hr.onrender.com/api";
+const API_BASE = "https://backendfinal-lcjz.onrender.com/api";
 let carrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
 // =========================

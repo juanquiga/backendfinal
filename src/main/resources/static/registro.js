@@ -1,5 +1,5 @@
 // registro.js
-const API_BASE = "https://backendfinal-s5hr.onrender.com/api"; // tu backend
+const API_BASE = "https://backendfinal-lcjz.onrender.com/api"; // tu backend
 
 const registerForm = document.getElementById("registerForm");
 if (registerForm) {

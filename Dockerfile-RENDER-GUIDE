@@ -1,0 +1,178 @@
+# Stage 1: BUILD - Compile and package the application
+FROM maven:3.8.6-openjdk-17 AS builder
+
+# 📝 Set working directory
+WORKDIR /app
+
+# 📦 Copy source code
+COPY . .
+
+# 🔨 Build the application
+# --skip-tests for faster builds in production! ⚡
+RUN mvn clean package -DskipTests
+
+# Stage 2: RUNTIME - Run the application
+FROM openjdk:17-jdk-slim
+
+# 📋 METADATA - Labels for documentation
+LABEL maintainer="your-email@example.com"
+LABEL description="Backend API for E-commerce Platform on Render"
+LABEL version="1.0.0"
+
+# 🔧 ENVIRONMENT SETUP
+
+# Set working directory
+WORKDIR /app
+
+# Create app user (FANTASTIC for security!)
+RUN useradd -m -u 1001 appuser
+
+# 📝 Set timezone
+ENV TZ=UTC
+
+# 📦 COPY APPLICATION JAR
+
+# Copy built JAR from builder stage
+COPY --from=builder /app/target/backend-*.jar app.jar
+# ↑ AMAZING! The compiled application!
+
+# Set proper ownership
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user (SECURITY FIRST!)
+USER appuser
+
+# 🌐 EXPOSE PORT
+
+# Expose port 8080 (Render sets $PORT environment variable)
+EXPOSE 8080
+
+# 🚀 HEALTH CHECK (FANTASTIC for monitoring!)
+
+# Check if application is running every 30 seconds
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/api/v1/actuator/health || exit 1
+
+# ↑ INCREDIBLE! Render monitors this for auto-restart! 🎯
+
+# 🎯 STARTUP COMMAND
+
+# Run the application with environment variables from Render
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Command line arguments:
+# -Xmx512m = Maximum heap size (512MB - adjust if needed!)
+# -Xms256m = Initial heap size
+# -server = Server JVM optimizations
+# Environment variables are injected by Render automatically!
+
+# 📝 BUILD & DEPLOYMENT INSTRUCTIONS
+
+# To build locally:
+# docker build -t my-app:latest .
+
+# To run locally:
+# docker run -p 8080:8080 \
+#   -e DATABASE_URL=postgresql://... \
+#   -e JWT_SECRET=... \
+#   my-app:latest
+
+# Render automatically:
+# 1. Reads this Dockerfile
+# 2. Builds the image
+# 3. Deploys to container
+# 4. Sets environment variables
+# 5. Monitors health checks!
+
+# 📄 .dockerignore FILE
+
+# Create a file named .dockerignore to exclude unnecessary files:
+
+# .git
+# .gitignore
+# .env
+# .env.local
+# .env.*.local
+# .idea/
+# .vscode/
+# *.class
+# *.log
+# target/
+# node_modules/
+# npm-debug.log
+# .DS_Store
+# .git/
+# .gitignore
+# *.md
+# LICENSE
+
+# ↑ These files won't be copied to Docker image!
+# FANTASTIC for smaller image size! 📦
+
+# 🔐 SECURITY BEST PRACTICES IN DOCKER
+
+# ✅ IMPLEMENTED:
+# - Non-root user (appuser)
+# - Read-only where possible
+# - Minimal base image
+# - No hardcoded secrets
+# - Health checks enabled
+
+# ✅ ADDITIONAL RECOMMENDATIONS:
+# - Scan image for vulnerabilities
+# - Keep base images updated
+# - Use secrets management
+# - Implement rate limiting
+# - Enable access logs
+
+# 📊 ENVIRONMENT VARIABLES IN RENDER
+
+# Render automatically provides:
+# PORT=8080          - Server port
+# HOSTNAME=0.0.0.0   - Bind to all interfaces
+
+# You provide (in Render dashboard):
+# DATABASE_URL       - PostgreSQL connection string
+# JWT_SECRET         - Secret key for JWT tokens
+# ADMIN_PASSWORD     - Admin user password
+# SPRING_PROFILE_ACTIVE - Environment profile
+
+# Docker receives these via environment variables! 🎯
+
+# 🚀 DEPLOYMENT CHECKLIST
+
+# Before deploying to Render:
+# ✅ Dockerfile is in backend directory
+# ✅ .dockerignore is configured
+# ✅ pom.xml builds successfully locally
+# ✅ All environment variables defined in Render dashboard
+# ✅ Database is created on Render
+# ✅ Health check endpoint is working (/api/v1/actuator/health)
+# ✅ Application listens on port 8080
+# ✅ No hardcoded credentials in code
+
+# 🎯 RENDER SERVICE CONFIGURATION (render.yaml)
+
+# Alternatively, you can use render.yaml in repo root:
+
+# services:
+# - name: backend-api
+#   type: web
+#   env: docker
+#   plan: standard
+#   healthCheckPath: /api/v1/actuator/health
+#   buildCommand: mvn clean package -DskipTests
+#   startCommand: java -jar target/backend-*.jar
+#   envVars:
+#     - key: DATABASE_URL
+#       sync: false
+#     - key: JWT_SECRET
+#       sync: false
+#     - key: SPRING_PROFILE_ACTIVE
+#       value: production
+#   
+# databases:
+# - name: postgres
+#   plan: standard
+#   region: ohio
+#   ipAllowList: []

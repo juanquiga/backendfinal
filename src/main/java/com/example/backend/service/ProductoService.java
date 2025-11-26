@@ -1,14 +1,15 @@
 package com.example.backend.service;
 
-import org.springframework.stereotype.Service;
-import com.example.backend.model.Producto;
-import com.example.backend.dto.ProductoDTO;
-import com.example.backend.exception.ResourceNotFoundException;
-import com.example.backend.exception.BusinessException;
-import com.example.backend.repository.ProductoRepository;
-
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.example.backend.dto.ProductoDTO;
+import com.example.backend.exception.BusinessException;
+import com.example.backend.exception.ResourceNotFoundException;
+import com.example.backend.model.Producto;
+import com.example.backend.repository.ProductoRepository;
 
 /**
  * Servicio de Productos.
@@ -22,9 +23,30 @@ import java.util.stream.Collectors;
 public class ProductoService {
 
     private final ProductoRepository productoRepository;
+    private final com.example.backend.repository.UsuarioRepository usuarioRepository;
+    private final org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder;
+    private final com.example.backend.security.JwtUtils jwtUtils;
 
-    public ProductoService(ProductoRepository productoRepository) {
+    public ProductoService(ProductoRepository productoRepository,
+                          com.example.backend.repository.UsuarioRepository usuarioRepository,
+                          org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder passwordEncoder,
+                          com.example.backend.security.JwtUtils jwtUtils) {
         this.productoRepository = productoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtils = jwtUtils;
+    }
+
+    public com.example.backend.repository.UsuarioRepository getUsuarioRepository() {
+        return usuarioRepository;
+    }
+
+    public org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
+    public com.example.backend.security.JwtUtils getJwtUtils() {
+        return jwtUtils;
     }
 
     /**

@@ -34,7 +34,7 @@ public class SecurityConfig {
           .cors(Customizer.withDefaults())
           .csrf(csrf -> csrf.disable())
           .authorizeHttpRequests(auth -> auth
-               .requestMatchers("/api/auth/**", "/", "/index.html", "/favicon.ico").permitAll()
+            .requestMatchers("/api/auth/**", "/api/public/**", "/", "/index.html", "/favicon.ico").permitAll()
                .anyRequest().authenticated()
           )
           .addFilterBefore(jwtFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
